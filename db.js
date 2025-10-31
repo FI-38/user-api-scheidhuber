@@ -8,6 +8,7 @@ const pool = mariadb.createPool({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
   connectionLimit: 5,
+  insertIdAsNumber: true
 });
 
 // Verbindung testen
