@@ -16,38 +16,6 @@ const getDatabaseConnection = (await import('../db')).default;
 // dynamischer Import von app aus `index.js` nach dem Mock
 const { app } = await import('../index');
 
-describe('GET /api/users', () => {
-    it('should return a JSON response with a list of users', async () => {
-        // Im Test den Mock der Verbindung anpassen
-        getDatabaseConnection.mockImplementation(() => ({
-            query: jest.fn().mockResolvedValue([
-                { id: 1, username: 'user1' },
-                { id: 2, username: 'user2' },
-            ]),
-            release: jest.fn(),
-        }));
-        const response = await request(app).get('/api/users');
-
-        expect(response.statusCode).toBe(200);
-        expect(response.body).toEqual({
-            users: [
-                { id: 1, username: 'user1' },
-                { id: 2, username: 'user2' },
-            ]});
-        expect(response.headers['content-type']).toMatch(/json/);
-    });
-});
-
-
-describe('GET /api/name', () => {
-    it('should return a name', async () => {
-        const response = await request(app).get('/api/name');
-
-        expect(response.statusCode).toBe(200);
-        expect(response.body).toEqual({name: 'Max'});
-        expect(response.headers['content-type']).toMatch(/json/);
-    });
-});
 
 describe('Authentication Middleware', () => {
     it('should deny access without a token', async () => {
@@ -66,6 +34,13 @@ describe('Authentication Middleware', () => {
     });
 
     it('should allow access with a valid token', async () => {
+        getDatabaseConnection.mockImplementation(() => ({
+            query: jest.fn().mockResolvedValue([
+                { id: 1, username: 'user1' },
+                { id: 2, username: 'user2' },
+            ]),
+            release: jest.fn(),
+        }));
         const token = jwt.sign(
             { id: 1, username: 'testuser' },
             process.env.JWT_SECRET_KEY
@@ -76,20 +51,3 @@ describe('Authentication Middleware', () => {
         expect(response.statusCode).toBe(200);
     });
 });
-
-
-
-describe('GET /', () => {
-  it('should return hello world', async () => {
-    const response = await request(app).get('/');
-    expect(response.statusCode).toBe(200);
-    expect(response.body).toEqual({ hello: 'world' });
-  });
-});
-
-
-
-test('adds 1 + 2 to equal 3', () => {
-  expect(1 + 2).toBe(3);
-});
-

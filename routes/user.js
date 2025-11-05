@@ -19,7 +19,7 @@ router.post('/api/login', async (req, res) => {
     console.log(req.body);
     const { username, password } = req.body;
 
-    const conn = await pool.getConnection();
+    const conn = await getDatabaseConnection();
 
     console.log(conn);
     let user;
