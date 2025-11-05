@@ -39,6 +39,16 @@ describe('GET /api/users', () => {
 });
 
 
+describe('GET /api/name', () => {
+    it('should return a name', async () => {
+        const response = await request(app).get('/api/name');
+
+        expect(response.statusCode).toBe(200);
+        expect(response.body).toEqual({name: 'Max'});
+        expect(response.headers['content-type']).toMatch(/json/);
+    });
+});
+
 describe('Authentication Middleware', () => {
     it('should deny access without a token', async () => {
         const response = await request(app).get('/api/profile');
