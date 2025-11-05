@@ -1,14 +1,15 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import pool from './db.js';
+// import pool from './db.js';
+import getDatabaseConnection from './db.js';
 import cors from 'cors';
 import authMiddleware from './middleware/auth.js';
 
 // Prototype overrides
 BigInt.prototype.toJSON = function() { return this.toString() }
 
-const app = express();
+export const app = express();
 
 // configure json in req.body
 app.use(express.json());
@@ -19,6 +20,20 @@ app.use(cors({
     // origin: '*', // Everything-URL
     credentials: true         // Erlaubt das Senden von Cookies, falls benötigt
 }));
+
+app.get('/', (req, res) => {
+    res.status(200).json({ "hello": "world" });
+})
+
+app.get('/api/users', async (req, res) => {
+    const conn = await getDatabaseConnection();
+
+    const users = await conn.query('SELECT * FROM user');
+
+    res.status(200).json({users});
+});
+
+
 
 app.post('/api/login', async (req, res) => {
     console.log(req.body);
@@ -120,7 +135,7 @@ app.post('/api/register', async (req, res) => {
 app.get('/api/profile', authMiddleware, async (req, res) => {
     const userId = req.user.id;
 
-    const conn = await pool.getConnection();
+    const conn = await getDatabaseConnection();
 
     try {
         const [userResult] = await conn.query(
@@ -169,11 +184,17 @@ app.put('/api/profile', authMiddleware, async (req, res) => {
     }
 });
 
-app.get('/', (req, res) => {
-    res.status(200).json({ "hello": "world" });
-})
+// Middleware for catching all errors
+app.use((err, req, res, next) => {
+    console.log(`An error occured: ${err}`);
+    console.error('Error information:', {
+        message: err.message,
+        stack: err.stack,
+        status: err.status || 500
+    });
 
-// Server starten
-app.listen(process.env.PORT, () => {
-    console.log(`Server läuft auf http://server:${process.env.PORT}`);
+    res.status(err.status || 500).json({
+        error: err.message,
+        ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+    });
 });
